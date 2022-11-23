@@ -1,53 +1,37 @@
-from django.shortcuts import render
-from django.shortcuts import get_object_or_404
-
-from django.views.decorators.csrf import csrf_protect
-
+from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-from django.http import HttpResponse, Http404
-
+from django.views.decorators.csrf import csrf_protect
 
 from .models import Page
 
 
 @csrf_protect
 def page(request, url):
-	context = dict()
-	context['page'] = get_object_or_404(Page, url=url, sites__in=[request.site])
+    context = dict()
+    page = get_object_or_404(Page, url=url, sites__in=[request.site])
 
-	# Pagination
-	pages_list = Page.objects.filter(public=True, parent=context['page'])
-	page_number = request.GET.get('page', None)
+    # Pagination
+    current_page_number = request.GET.get("page", 1)
+    paginator = Paginator(page.children.filter(public=True, sites__in=[request.site]), page.per_page)
+    try:
+        page_children_list = paginator.page(current_page_number)
+    except PageNotAnInteger:
+        page_children_list = paginator.page(1)
+    except EmptyPage:
+        page_children_list = paginator.page(paginator.num_pages)
+    #
+    context["page"] = page
+    context["page_children_list"] = page_children_list
 
-	paginator = Paginator(pages_list, context['page'].per_page)
-	try:
-		pages_list = paginator.page(page_number)
-	except PageNotAnInteger:
-		pages_list = paginator.page(1)
-	except EmptyPage:
-		pages_list = paginator.page(paginator.num_pages)
+    # Template
+    if context["page"].template:
+        template = context["page"].template
+    else:
+        template = "content/page.html"
 
-	context['pages_list'] = pages_list
-
-	# Template
-	if context['page'].template:
-		template = context['page'].template
-	else:
-		template = 'cms/page.html'
-
-	return render(request, template, context)
-
-
-def robots_txt(request):
-	if hasattr(request.site, 'settings'):
-		return HttpResponse(request.site.settings.robots_txt, content_type='text/plain')
-	else:
-		raise Http404
+    return render(request, template, context)
 
 
-def sitemap_xml(request):
-	if hasattr(request.site, 'settings'):
-		return HttpResponse(request.site.settings.sitemap_xml, content_type='text/xml')
-	else:
-		raise Http404
+def dd(request):
+    return render(request, "content/page.html")

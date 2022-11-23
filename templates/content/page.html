@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% load area %}
+{% load render %}
+
+<!-- b-page -->
+{% block content %}
+<div class='page app--content template--content_page'>
+	{# {% area "area_slug" %} #}
+	<h1 class='page__header'>{{ page.header|safe }}</h1>
+
+	{% if page.intro %}
+		<div class='page__intro'>{{ page.intro|safe }}</div>
+	{% endif %}
+	{% if page.image %}
+		<img src='{{ page.image.url }}' alt='{{ page.title }}' class='page__image'>
+	{% endif %}
+	<div class='page__text'>{% render page.text %}</div>
+
+	{% include "content/childs.html" %}
+	{% include "content/paginator.html" %}
+</div>
+
+{% endblock %}

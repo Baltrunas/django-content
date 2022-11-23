@@ -1,0 +1,14 @@
+{% load i18n %}
+{% load thumbnail %}
+
+{% for item in pages_list %}
+	<div class='page__child'>
+		{% thumbnail item.image "300x250" crop="center" as im %}
+			<img class='page__child__image' src='{{ im.url }}' alt='{{ item.header }}' title='{{ item.header }}'>
+		{% empty %}
+			<img class='page__child__image' src='/static/pages/img/no_photo.png' alt='{{ item.header }}' title='{% trans "No photo" %}'>
+		{% endthumbnail %}
+		<a class='page__child__header' href='{{ item.get_absolute_url }}' >{{ item.header }}</a>
+		<div class='page__child__intro'>{{ item.intro|safe }}</div>
+	</div>
+{% endfor %}
