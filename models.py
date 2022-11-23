@@ -14,6 +14,7 @@ class URL(models.Model):
     title = models.CharField(verbose_name=_("Title"), max_length=256)
     url = models.CharField(verbose_name=_("URL or URL RegEx"), max_length=2048)
     regex = models.BooleanField(verbose_name=_("RegEx"), default=False)
+    # sites?
 
     # Meta base
     public = models.BooleanField(_("Public"), default=True)

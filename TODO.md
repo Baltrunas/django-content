@@ -203,3 +203,81 @@ Built-in Field classes
 
 
 -->
+
+
+
+# TODO: Refactor on seo app
+# LocaleMiddleware
+class SwitchLocale:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        LOCALE_SPECIFIC_URL = getattr(settings, "LOCALE_SPECIFIC_URL", "domain")
+        LOCALE_DEFAULT = getattr(settings, "LOCALE_DEFAULT", "de")
+        LOCALE_EXCLUDE = getattr(settings, "LOCALE_EXCLUDE", [])
+        LANGUAGES = getattr(settings, "LANGUAGES")
+
+        if LOCALE_SPECIFIC_URL == "domain":
+            if hasattr(request.site, "settings"):
+                language = request.site.settings.language
+            else:
+                language = settings.LANGUAGE_CODE
+
+            translation.activate(language)
+            request.LANGUAGE_CODE = language
+
+            response = self.get_response(request)
+
+        elif LOCALE_SPECIFIC_URL == "dir":
+            url = request.path_info
+            lang = LOCALE_DEFAULT
+
+            replace = True
+            for EX_URL in LOCALE_EXCLUDE:
+                if url.startswith(EX_URL):
+                    replace = False
+
+            if replace:
+                #  def withoud dir
+                for lk in LANGUAGES:
+                    if url.startswith("/" + lk[0] + "/") and lk[0] != LOCALE_DEFAULT:
+                        lang = lk[0]
+                        request.path_info = url[3:]
+
+                translation.activate(lang)
+                request.LANGUAGE_CODE = lang
+
+                response = self.get_response(request)
+
+                if lang != LOCALE_DEFAULT:
+                    response.content = re.sub(
+                        b"<a (.*?) (href)='/", rb"<a \1 href='/" + bytes(lang + "/", "utf-8"), response.content
+                    )
+                    response.content = re.sub(
+                        b'<a (.*?) (href)="/', rb'<a \1 href="/' + bytes(lang + "/", "utf-8"), response.content
+                    )
+
+                for lk in LANGUAGES:
+                    lng = bytes(lk[0], "utf-8")
+                    if request.GET.urlencode():
+                        rget = bytes("?" + request.GET.urlencode(), "utf-8")
+                    else:
+                        rget = b""
+                    if lk[0] == LOCALE_DEFAULT:
+                        response.content = re.sub(
+                            b'<a (.*?) href="lang-' + lng + b'"',
+                            rb'<a \1 href="' + bytes(request.path_info, "utf-8") + b'"' + rget,
+                            response.content,
+                        )
+                    else:
+                        response.content = re.sub(
+                            b'<a (.*?) href="lang-' + lng + b'"',
+                            rb'<a \1 href="/' + lng + bytes(request.path_info, "utf-8") + b'"' + rget,
+                            response.content,
+                        )
+
+            else:
+                response = self.get_response(request)
+
+        return response
