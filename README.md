@@ -5,11 +5,13 @@ Also, it can add extra content to any page in other apps.
 ## Requirements
 * django-helpful
 * sorl-thumbnail
+* django-rest-framework
 
 ## Install
 * Add ```"apps.context",``` to ```INSTALLED_APPS ```
 * Add ```"apps.cms.context_processors.page",``` to ```context_processors``` 
 * Add ```"apps.content.middleware.PageMiddleware",``` to ```MIDDLEWARE```
+* Add to urls.py ```path("", include("apps.content.urls")),```
 * Run ```migrate content```
 
 ## Notise

@@ -2,6 +2,11 @@ from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views.decorators.csrf import csrf_protect
 
+from rest_framework import permissions
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .serializers import PageSerializer
 from .models import Page
 
 
@@ -29,3 +34,18 @@ def page(request, url):
     context["page"] = content_page
     context["page_children_list"] = page_children_list
     return render(request, template, context)
+
+
+class PageView(APIView):
+    """
+    API Page view endpoint.
+    """
+
+    permission_classes = [permissions.AllowAny]
+
+    def get_object(self, url):
+        return get_object_or_404(Page, url=url, sites__in=[self.request.site])
+
+    def get(self, request, url, format=None):
+        serializer = PageSerializer(self.get_object(self, url), context={"request": self.request})
+        return Response(serializer.data)
