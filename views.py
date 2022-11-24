@@ -47,5 +47,5 @@ class PageView(APIView):
         return get_object_or_404(Page, url=url, sites__in=[self.request.site])
 
     def get(self, request, url, format=None):
-        serializer = PageSerializer(self.get_object(self, url), context={"request": self.request})
+        serializer = PageSerializer(self.get_object(url), context={"request": self.request})
         return Response(serializer.data)
